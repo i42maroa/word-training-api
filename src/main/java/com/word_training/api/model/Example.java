@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class Example {
     private String sentence;
-    private String translatedSentence;
-    private String extraInfo;
+    private String translated;
+    private String info;
 }

@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 public class RecordDefinition {
     private String translation;
-    private DefinitionType definitionType;
-    private String extraInfo;
+    private DefinitionType type;
+    private String info;
     private List<Example> examples;
 }
