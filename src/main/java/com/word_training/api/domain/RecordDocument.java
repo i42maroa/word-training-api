@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Document(collection = "record")
+@Document(collection = "records")
 @NoArgsConstructor
 public class RecordDocument extends Record {
 
