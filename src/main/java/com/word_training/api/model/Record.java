@@ -9,7 +9,7 @@ import java.util.List;
 public class Record {
     private String value;
     private String type;
-    private List<RecordDefinition> definitions;
+    private List<Definition> definitions;
     private OffsetDateTime creationDate;
     private OffsetDateTime modificationDate;
 
