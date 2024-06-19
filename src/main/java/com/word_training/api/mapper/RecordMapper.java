@@ -5,6 +5,7 @@ import com.mongodb.client.model.UpdateOneModel;
 import com.word_training.api.domain.RecordDocument;
 import com.word_training.api.model.input.RequestDefinition;
 import com.word_training.api.model.input.RequestExample;
+import com.word_training.api.model.input.RequestModifyDefinition;
 import com.word_training.api.model.input.RequestRecord;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -22,10 +23,12 @@ public interface RecordMapper {
     UpdateOneModel<Document> generateUpdateRecord(ObjectId id, RequestRecord record);
 
     List<UpdateOneModel<Document>> generateUpdateNewDefinition(ObjectId id, RequestDefinition definition);
+    UpdateOneModel<Document> generateUpdateModifyDefinition(ObjectId id, String definitionId, RequestModifyDefinition definition);
+    UpdateOneModel<Document> generateUpdateDeleteDefinition(ObjectId id, String definitionId);
 
     UpdateOneModel<Document> generateUpdateNewExample(ObjectId id, String definitionId, RequestExample example);
-
     UpdateOneModel<Document> generateUpdateModifyExample(ObjectId id, String definitionId, String exampleId, RequestExample example);
+    UpdateOneModel<Document> generateUpdateDeleteExample(ObjectId id, String definitionId, String exampleId);
 
 
     default Document updateModificationDate(Clock clock){

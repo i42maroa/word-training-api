@@ -6,6 +6,7 @@ import com.word_training.api.exceptions.WordTrainingApiException;
 import com.word_training.api.mapper.RecordMapper;
 import com.word_training.api.model.input.RequestDefinition;
 import com.word_training.api.model.input.RequestExample;
+import com.word_training.api.model.input.RequestModifyDefinition;
 import com.word_training.api.model.input.RequestRecord;
 import com.word_training.api.model.output.Pagination;
 import com.word_training.api.model.queries.RecordPageInputQuery;
@@ -70,6 +71,18 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
+    public Mono<BulkWriteResult> modifyDefinitionInRecord(ObjectId idRecord, String definitionId, RequestModifyDefinition req) {
+        var update = mapper.generateUpdateModifyDefinition(idRecord, definitionId, req);
+        return repository.bulkUpdate(List.of(update));
+    }
+
+    @Override
+    public Mono<BulkWriteResult> deleteDefinitionInRecord(ObjectId idRecord, String definitionId) {
+        var update = mapper.generateUpdateDeleteDefinition(idRecord, definitionId);
+        return repository.bulkUpdate(List.of(update));
+    }
+
+    @Override
     public Mono<BulkWriteResult> newExampleToDefinition(ObjectId idRecord, String definitionId, RequestExample def) {
         var update = mapper.generateUpdateNewExample(idRecord, definitionId, def);
         return repository.bulkUpdate(List.of(update));
@@ -82,6 +95,12 @@ public class RecordServiceImpl implements RecordService {
                 .orElseThrow(() -> new WordTrainingApiException("Request of change empty"));
 
         var update = mapper.generateUpdateModifyExample(idRecord, definitionId, exampleId, req);
+        return repository.bulkUpdate(List.of(update));
+    }
+
+    @Override
+    public Mono<BulkWriteResult> deleteExampleInDefinition(ObjectId idRecord, String definitionId, String exampleId) {
+        var update = mapper.generateUpdateDeleteExample(idRecord, definitionId, exampleId);
         return repository.bulkUpdate(List.of(update));
     }
 }

@@ -4,6 +4,7 @@ import com.mongodb.bulk.BulkWriteResult;
 import com.word_training.api.domain.RecordDocument;
 import com.word_training.api.model.input.RequestDefinition;
 import com.word_training.api.model.input.RequestExample;
+import com.word_training.api.model.input.RequestModifyDefinition;
 import com.word_training.api.model.input.RequestRecord;
 import com.word_training.api.model.output.Pagination;
 import com.word_training.api.service.RecordService;
@@ -53,7 +54,7 @@ public class WordTrainingController {
 
     @PutMapping("/{id}")
     public Mono<ResponseEntity<BulkWriteResult>> modifyRecord(@PathVariable("id") ObjectId id,
-            @RequestBody RequestRecord request) {
+                                                              @RequestBody RequestRecord request) {
         return service.modifyRecord(id, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
@@ -76,18 +77,22 @@ public class WordTrainingController {
     }
 
     @PutMapping("/{id}/definition/{definitionId}")
-    public Mono<ResponseEntity<RecordDocument>> modifyDefinition(
+    public Mono<ResponseEntity<BulkWriteResult>> modifyDefinition(
             @PathVariable("id") ObjectId id,
-            @PathVariable("definitionId") ObjectId definitionId,
-            @RequestBody RequestDefinition request) {
-        return Mono.just(ResponseEntity.ok().build());
+            @PathVariable("definitionId") String definitionId,
+            @RequestBody RequestModifyDefinition request) {
+        return service.modifyDefinitionInRecord(id, definitionId, request)
+                .map(ResponseEntity::ok)
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @DeleteMapping("/{id}/definition/{definitionId}")
-    public Mono<ResponseEntity<RecordDocument>> removeDefinition(
+    public Mono<ResponseEntity<BulkWriteResult>> removeDefinition(
             @PathVariable("id") ObjectId id,
-            @PathVariable("definitionId") ObjectId definitionId) {
-        return Mono.just(ResponseEntity.ok().build());
+            @PathVariable("definitionId") String definitionId) {
+        return service.deleteDefinitionInRecord(id, definitionId)
+                .map(ResponseEntity::ok)
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     // EXAMPLES
@@ -96,7 +101,7 @@ public class WordTrainingController {
             @PathVariable("id") ObjectId id,
             @PathVariable("definitionId") String definitionId,
             @RequestBody RequestExample request) {
-        return service.newExampleToDefinition(id,definitionId, request)
+        return service.newExampleToDefinition(id, definitionId, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -107,16 +112,18 @@ public class WordTrainingController {
             @PathVariable("definitionId") String definitionId,
             @PathVariable("exampleId") String exampleId,
             @RequestBody RequestExample request) {
-        return service.modifyExampleInDefinition(id,definitionId,exampleId, request)
+        return service.modifyExampleInDefinition(id, definitionId, exampleId, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    @DeleteMapping("/{id}/{definitionId}/{exampleId}")
-    public Mono<ResponseEntity<RecordDocument>> deleteExample(
+    @DeleteMapping("/{id}/definition/{definitionId}/example/{exampleId}")
+    public Mono<ResponseEntity<BulkWriteResult>> deleteExample(
             @PathVariable("id") ObjectId id,
-            @PathVariable("definitionId") ObjectId definitionId,
-            @PathVariable("exampleId") ObjectId exampleId) {
-        return Mono.just(ResponseEntity.ok().build());
+            @PathVariable("definitionId") String definitionId,
+            @PathVariable("exampleId") String exampleId) {
+        return service.deleteExampleInDefinition(id, definitionId, exampleId)
+                .map(ResponseEntity::ok)
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
