@@ -37,29 +37,16 @@ public class RecordMapperImpl implements RecordMapper {
     public RecordDocument generateRecordByRequest(RequestRecord request) {
         var record = new RecordDocument();
 
-        record.setCreationDate(OffsetDateTime.now());
-        record.setModificationDate(OffsetDateTime.now());
+        setNecessaryUpdate(request.getType(), record::setType, "Record type not define");
+        setNecessaryUpdate(request.getValue(), record::setValue, "Record value not define");
+        record.setCreationDate(OffsetDateTime.now(clock));
+        record.setModificationDate(OffsetDateTime.now(clock));
 
-        Optional.ofNullable(request)
-                .map(RequestRecord::getType)
-                .ifPresentOrElse(record::setType, () -> {
-                    throw new WordTrainingApiException("Record type not define");
-                });
-
-        Optional.ofNullable(request)
-                .map(RequestRecord::getValue)
-                .ifPresentOrElse(record::setValue, () -> {
-                    throw new WordTrainingApiException("Record value not define");
-                });
-
-        Optional.ofNullable(request)
-                .map(RequestRecord::getDefinitions)
+        Optional.ofNullable(request.getDefinitions())
                 .ifPresent(list -> {
                     var definitions = list.stream()
                             .map(this::setDefinitionIdAndExampleId)
                             .toList();
-
-
                     record.setDefinitions(definitions);
                 });
 
@@ -70,8 +57,8 @@ public class RecordMapperImpl implements RecordMapper {
     public UpdateOneModel<Document> generateUpdateRecord(String id, RequestModifyRecord record) {
         var update = new Update();
 
-        Optional.ofNullable(record.getValue())
-                .ifPresent(v -> update.set(REC_VALUE_FIELD, v));
+        addOptionalSetUpdate(update, record.getValue(), REC_VALUE_FIELD);
+
         Optional.ofNullable(record.getType())
                 .ifPresent(value ->
                         Optional.of(value)
@@ -88,20 +75,11 @@ public class RecordMapperImpl implements RecordMapper {
 
     private Definition setDefinitionIdAndExampleId(RequestDefinition req) {
         var definition = new Definition();
+
         definition.setDefinitionId(new ObjectId().toString());
-
-        Optional.ofNullable(req.getTranslation())
-                .ifPresentOrElse(definition::setTranslation, () -> {
-                    throw new WordTrainingApiException("Definition translation not defined");
-                });
-
-        Optional.ofNullable(req.getType())
-                .filter(isValidDefinitionType)
-                .ifPresentOrElse(definition::setTranslation, () -> {
-                    throw new WordTrainingApiException("Definition type not defined");
-                });
-
-        Optional.ofNullable(req.getInfo()).ifPresent(definition::setInfo);
+        setNecessaryUpdate(req.getTranslation(), definition::setTranslation, "Definition translation not defined");
+        setNecessaryUpdateEnum(req.getType(), isValidDefinitionType, definition::setTranslation, "Definition type not defined");
+        setOptionalUpdate(req.getInfo(), definition::setInfo);
 
         Optional.ofNullable(req.getExamples())
                 .ifPresent(examples -> {
@@ -115,20 +93,14 @@ public class RecordMapperImpl implements RecordMapper {
         return definition;
     }
 
-
     private Example setExampleId(RequestExample req) {
         var example = new Example();
 
-        Optional.ofNullable(req.getTranslation())
-                .ifPresentOrElse(example::setSentence, () -> {
-                    throw new WordTrainingApiException("Example sentence not defined");
-                });
-
-        Optional.ofNullable(req.getTranslation()).ifPresent(example::setTranslation);
-        Optional.ofNullable(req.getInfo()).ifPresent(example::setInfo);
+        setNecessaryUpdate(req.getTranslation(), example::setSentence, "Example sentence not defined");
+        setOptionalUpdate(req.getTranslation(), example::setTranslation);
+        setOptionalUpdate(req.getInfo(), example::setInfo);
         example.setExampleId(new ObjectId().toString());
+
         return example;
     }
-
-
 }
