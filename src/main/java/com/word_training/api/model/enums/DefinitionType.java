@@ -10,10 +10,10 @@ import java.util.function.Predicate;
 @Getter
 @AllArgsConstructor
 public enum DefinitionType {
-    NOUN("noun"),
-    ADJ("adjective"),
-    ADV("adverb"),
-    VERB("verb");
+    NOUN("NOUN"),
+    ADJECTIVE("ADJECTIVE"),
+    ADVERB("ADVERB"),
+    VERB("VERB");
 
     private final String value;
     private static final Map<String, DefinitionType> typeMap = new HashMap<>();

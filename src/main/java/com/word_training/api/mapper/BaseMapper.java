@@ -33,6 +33,10 @@ public interface BaseMapper {
         return Filters.eq("_id", new ObjectId(id));
     }
 
+    default Document generateSetUpdate(Document updateFields){
+        return new Document().append("$set", updateFields);
+    }
+
     default void setOptionalUpdate(Document update, String field, String fieldName) {
         Optional.ofNullable(field)
                 .ifPresent(value -> update.append(fieldName, value));
@@ -46,6 +50,7 @@ public interface BaseMapper {
     }
     default void setNecesaryUpdateEnum(Document update, Predicate<String> enumFilter, String fieldValue, String fieldName, String textError) {
         Optional.ofNullable(fieldValue)
+                .map(String::toUpperCase)
                 .filter(enumFilter)
                 .ifPresentOrElse(value -> update.append(fieldName, value), () -> {
                     throw new WordTrainingApiException(textError);
@@ -76,6 +81,7 @@ public interface BaseMapper {
 
     default void setNecessaryUpdateEnum(String field, Predicate<String> enumFilter, Consumer<String> fieldSet, String errorText){
         Optional.ofNullable(field)
+                .map(String::toUpperCase)
                 .filter(enumFilter)
                 .ifPresentOrElse(fieldSet, () -> {
                     throw new WordTrainingApiException(errorText);

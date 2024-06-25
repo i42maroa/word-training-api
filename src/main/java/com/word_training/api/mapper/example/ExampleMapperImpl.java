@@ -41,18 +41,20 @@ public class ExampleMapperImpl implements ExampleMapper {
 
     @Override
     public UpdateOneModel<Document> generateUpdateModifyExample(String id, String definitionId, String exampleId, RequestModifyExample request) {
-        var update = new Update();
+        var updateFields = new Document();
         var pathArray = DEFINITIONS_FIELD + DOT + ARRAY_FILTER_PARAM + DOT + DEF_EXAMPLES_FIELD + DOT + ARRAY_FILTER_PARAM2 + DOT;
 
-        addOptionalSetUpdate(update, request.getSentence(), pathArray + EX_SENTENCE_FIELD);
-        addOptionalSetUpdate(update, request.getTranslation(), pathArray + EX_TRANSLATION_FIELD);
-        addOptionalSetUpdate(update, request.getInfo(), pathArray + EX_INFO_FIELD);
+        setOptionalUpdate(updateFields, request.getSentence(), pathArray + EX_SENTENCE_FIELD);
+        setOptionalUpdate(updateFields, request.getTranslation(), pathArray + EX_TRANSLATION_FIELD);
+        setOptionalUpdate(updateFields, request.getInfo(), pathArray + EX_INFO_FIELD);
 
         var arraysFilters = new HashMap<String, String>();
         arraysFilters.put(PARAM + DOT + DEF_DEFINITIONID_FIELD, definitionId);
         arraysFilters.put(PARAM2 + DOT + EX_EXAMPLE_ID_FIELD, exampleId);
 
-        return new UpdateOneModel<>(filterById(id), Updates.combine(update.getUpdateObject(), updateModificationDate(clock)),
+        var update = generateSetUpdate(updateFields);
+
+        return new UpdateOneModel<>(filterById(id), Updates.combine(update, updateModificationDate(clock)),
                 this.generateArrayFilters(arraysFilters));
     }
 

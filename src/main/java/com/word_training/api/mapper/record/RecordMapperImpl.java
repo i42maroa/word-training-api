@@ -37,7 +37,7 @@ public class RecordMapperImpl implements RecordMapper {
     public RecordDocument generateRecordByRequest(RequestRecord request) {
         var record = new RecordDocument();
 
-        setNecessaryUpdate(request.getType(), record::setType, "Record type not define");
+        setNecessaryUpdateEnum(request.getType(), RecordType.isValidRecordType, record::setType, "Record type not define");
         setNecessaryUpdate(request.getValue(), record::setValue, "Record value not define");
         record.setCreationDate(OffsetDateTime.now(clock));
         record.setModificationDate(OffsetDateTime.now(clock));
@@ -62,6 +62,7 @@ public class RecordMapperImpl implements RecordMapper {
         Optional.ofNullable(record.getType())
                 .ifPresent(value ->
                         Optional.of(value)
+                                .map(String::toUpperCase)
                                 .filter(RecordType.isValidRecordType)
                                 .ifPresentOrElse(v -> update.set(REC_TYPE_FIELD, v),
                                         () -> {
@@ -76,10 +77,10 @@ public class RecordMapperImpl implements RecordMapper {
     private Definition setDefinitionIdAndExampleId(RequestDefinition req) {
         var definition = new Definition();
 
-        definition.setDefinitionId(new ObjectId().toString());
         setNecessaryUpdate(req.getTranslation(), definition::setTranslation, "Definition translation not defined");
-        setNecessaryUpdateEnum(req.getType(), isValidDefinitionType, definition::setTranslation, "Definition type not defined");
+        setNecessaryUpdateEnum(req.getType(), isValidDefinitionType, definition::setType, "Definition type not defined");
         setOptionalUpdate(req.getInfo(), definition::setInfo);
+        definition.setDefinitionId(new ObjectId().toString());
 
         Optional.ofNullable(req.getExamples())
                 .ifPresent(examples -> {

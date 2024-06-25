@@ -64,12 +64,12 @@ public class WordTrainingCRUDController {
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-    @Tag(name = "Records")
+   /* @Tag(name = "Records")
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<RecordDocument>> removeRecord(
             @PathVariable("id") String id) {
         return Mono.just(ResponseEntity.ok().build());
-    }
+    }*/
 
     // DEFINITIONS
     @Tag(name = "Definitions")

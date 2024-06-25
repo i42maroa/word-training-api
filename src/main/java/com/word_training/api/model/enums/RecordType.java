@@ -10,9 +10,9 @@ import java.util.function.Predicate;
 @Getter
 @AllArgsConstructor
 public enum RecordType {
-    WORD("word"),
-    PHRASAL_VERB("phrasal"),
-    EXPRESSION("expression");
+    WORD("WORD"),
+    PHRASAL_VERB("PHRASAL"),
+    EXPRESSION("EXPRESSION");
 
     private final String value;
     private static final Map<String, RecordType> recordTypeMap = new HashMap<>();

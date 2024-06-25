@@ -6,6 +6,7 @@ import com.word_training.api.exceptions.WordTrainingApiException;
 import com.word_training.api.mapper.definition.DefinitionMapper;
 import com.word_training.api.mapper.example.ExampleMapper;
 import com.word_training.api.mapper.record.RecordMapper;
+import com.word_training.api.model.enums.RecordType;
 import com.word_training.api.model.input.*;
 import com.word_training.api.model.output.Pagination;
 import com.word_training.api.model.queries.RecordPageInputQuery;
@@ -33,13 +34,19 @@ public class RecordServiceImpl implements RecordService {
 
     @Override
     public Mono<RecordDocument> getRecord(String id) {
+        isValidObjectId(id);
         return repository.findById(new ObjectId(id));
     }
 
     @Override
     public Mono<Pagination<RecordDocument>> getRecordPage(String type, Pageable pageRequest) {
+        Optional.ofNullable(type)
+                .map(String::toUpperCase)
+                .filter(RecordType.isValidRecordType)
+                .orElseThrow(() -> new WordTrainingApiException("Record type is not valid"));
+
         var query = new RecordPageInputQuery();
-        query.setType(type);
+        query.setType(type.toUpperCase());
 
         var listWordsMono = repository.findWordsPage(query, pageRequest).collectList();
         var countMono = repository.countWords(query);
@@ -57,7 +64,7 @@ public class RecordServiceImpl implements RecordService {
     public Mono<BulkWriteResult> modifyRecord(String id, RequestModifyRecord record) {
         isValidObjectId(id);
         Optional.ofNullable(record)
-                .filter(r -> nonNull(r.getValue()) && nonNull(r.getType()))
+                .filter(r -> nonNull(r.getValue()) || nonNull(r.getType()))
                 .orElseThrow(() -> new WordTrainingApiException("Request of change is empty"));
 
         var update = recordMapper.generateUpdateRecord(id, record);
@@ -103,8 +110,8 @@ public class RecordServiceImpl implements RecordService {
         isValidObjectId(exampleId);
 
         Optional.ofNullable(req)
-                .filter(r -> nonNull(r.getTranslation()) && nonNull(r.getInfo()) && nonNull(r.getSentence()))
-                .orElseThrow(() -> new WordTrainingApiException("Request of change empty"));
+                .filter(r -> nonNull(r.getTranslation()) || nonNull(r.getInfo()) || nonNull(r.getSentence()))
+                .orElseThrow(() -> new WordTrainingApiException("Request of change is empty"));
 
         var update = exampleMapper.generateUpdateModifyExample(idRecord, definitionId, exampleId, req);
         return repository.bulkUpdate(List.of(update));
