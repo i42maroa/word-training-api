@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: "english-training-api"
+  data:
+    mongodb:
+      uri: mongodb+srv://marinero:uSLt0klqQ7Gj1WgS@wordtraining.en1i3ki.mongodb.net/
+      database: word-training
+
