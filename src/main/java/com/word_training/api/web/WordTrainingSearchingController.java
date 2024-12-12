@@ -2,11 +2,11 @@ package com.word_training.api.web;
 
 import com.word_training.api.domain.RecordDocument;
 import com.word_training.api.model.output.Pagination;
+import com.word_training.api.model.queries.RecordPageInputQuery;
 import com.word_training.api.service.RecordService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +17,7 @@ import reactor.core.scheduler.Schedulers;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/record")
+@CrossOrigin(origins = "http://localhost:4200")
 public class WordTrainingSearchingController {
 
     private final RecordService service;
@@ -30,13 +31,13 @@ public class WordTrainingSearchingController {
     }
 
     @Tag(name = "Records")
-    @GetMapping("/page/{type}")
+    @PostMapping("/page")
     public Mono<ResponseEntity<Pagination<RecordDocument>>> getRecordPage(
-            @PathVariable("type") String type,
             @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestBody(required = false) RecordPageInputQuery requestFilters) {
 
-        return service.getRecordPage(type, PageRequest.of(page, size))
+        return service.getRecordPage(requestFilters, PageRequest.of(page, size))
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }

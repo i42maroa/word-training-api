@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class RequestExample {
+    private String exampleId;
     @NotNull
     private String sentence;
     private String translation;

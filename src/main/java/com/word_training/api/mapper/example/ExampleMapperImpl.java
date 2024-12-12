@@ -3,6 +3,7 @@ package com.word_training.api.mapper.example;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.Updates;
 import com.word_training.api.exceptions.WordTrainingApiException;
+import com.word_training.api.model.Example;
 import com.word_training.api.model.input.RequestExample;
 import com.word_training.api.model.input.RequestModifyExample;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -24,19 +26,18 @@ public class ExampleMapperImpl implements ExampleMapper {
     private final Clock clock;
 
     @Override
-    public UpdateOneModel<Document> generateUpdateNewExample(String id, String definitionId, RequestExample request) {
-        var update = new Document();
+    public Update generateUpdateNewExample(String id, String definitionId, RequestExample req) {
+        var example = new Example();
 
-        setNecesaryUpdate(update, request.getSentence(), EX_SENTENCE_FIELD, "Example sentence not defined");
-        setOptionalUpdate(update, request.getTranslation(), EX_TRANSLATION_FIELD);
-        setOptionalUpdate(update, request.getInfo(), EX_INFO_FIELD);
+        setNecessaryUpdate(req.getSentence(), example::setSentence, "Example sentence not defined");
+        setOptionalUpdate(req.getTranslation(), example::setTranslation);
+        setOptionalUpdate(req.getInfo(), example::setInfo);
+        example.setExampleId(new ObjectId().toString());
 
-        update.append(EX_EXAMPLE_ID_FIELD, new ObjectId().toString());
-
-        var pushUpdate = Updates.addToSet(DEFINITIONS_FIELD + DOT + ARRAY_FILTER_PARAM + DOT + DEF_EXAMPLES_FIELD, update);
-
-        return new UpdateOneModel<>(filterById(id), Updates.combine(pushUpdate, updateModificationDate(clock)),
-                this.generateSingletonArrayFilter(PARAM + DOT + DEF_DEFINITIONID_FIELD, definitionId));
+        return new Update()
+                .set("regModificationDate", OffsetDateTime.now(clock))
+                .addToSet(DEFINITIONS_FIELD + DOT + ARRAY_FILTER_PARAM + DOT + DEF_EXAMPLES_FIELD, example)
+                .filterArray(PARAM + DOT + DEF_DEFINITIONID_FIELD, definitionId);
     }
 
     @Override

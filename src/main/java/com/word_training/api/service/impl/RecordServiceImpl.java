@@ -13,13 +13,14 @@ import com.word_training.api.model.queries.RecordPageInputQuery;
 import com.word_training.api.repository.RecordRepository;
 import com.word_training.api.service.RecordService;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 
@@ -35,21 +36,28 @@ public class RecordServiceImpl implements RecordService {
     @Override
     public Mono<RecordDocument> getRecord(String id) {
         isValidObjectId(id);
-        return repository.findById(new ObjectId(id));
+        return repository.findByRecordId(id);
     }
 
     @Override
-    public Mono<Pagination<RecordDocument>> getRecordPage(String type, Pageable pageRequest) {
-        Optional.ofNullable(type)
-                .map(String::toUpperCase)
-                .filter(RecordType.isValidRecordType)
-                .orElseThrow(() -> new WordTrainingApiException("Record type is not valid"));
+    public Mono<Pagination<RecordDocument>> getRecordPage(RecordPageInputQuery query, Pageable pageRequest) {
 
-        var query = new RecordPageInputQuery();
-        query.setType(type.toUpperCase());
+        //TODO: clean
+       var cleanQuery = Optional.ofNullable(query)
+                .map(q -> {
+                    var listType = Stream.ofNullable(query.getTypeIn())
+                            .flatMap(Collection::stream)
+                            .map(String::toUpperCase)
+                            .filter(RecordType.isValidRecordType)
+                            .toList();
 
-        var listWordsMono = repository.findWordsPage(query, pageRequest).collectList();
-        var countMono = repository.countWords(query);
+                    query.setTypeIn(listType);
+                    return query;
+                })
+               .orElse(new RecordPageInputQuery());
+
+        var listWordsMono = repository.findWordsPage(cleanQuery, pageRequest).collectList();
+        var countMono = repository.countWords(cleanQuery);
 
         return Mono.zip(listWordsMono, countMono, (items, count) -> new Pagination<>(items, pageRequest, count));
     }
@@ -61,22 +69,27 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
-    public Mono<BulkWriteResult> modifyRecord(String id, RequestModifyRecord record) {
+    public Mono<RecordDocument> modifyRecord(String id, RequestRecord record) {
         isValidObjectId(id);
         Optional.ofNullable(record)
-                .filter(r -> nonNull(r.getValue()) || nonNull(r.getType()))
                 .orElseThrow(() -> new WordTrainingApiException("Request of change is empty"));
+        var update = recordMapper.generateUpdateToRecord(id, record);
 
-        var update = recordMapper.generateUpdateRecord(id, record);
-        return repository.bulkUpdate(List.of(update));
+        return repository.findAndModify(id, update);
+    }
+
+
+    @Override
+    public Mono<Void> deleteRecord(String recordId) {
+        return repository.deleteByRecordId(recordId);
     }
 
     @Override
-    public Mono<BulkWriteResult> newDefinitionToRecord(String id, RequestDefinition def) {
+    public Mono<RecordDocument> newDefinitionToRecord(String id, RequestDefinition def) {
         isValidObjectId(id);
-        var update = definitionMapper.generateUpdateNewDefinition(id, def);
+        var update = definitionMapper.generateUpdateNewDefinition2(id, def);
 
-        return repository.bulkUpdate(update);
+        return repository.findAndModify(id, update);
     }
 
     @Override
@@ -96,11 +109,12 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
-    public Mono<BulkWriteResult> newExampleToDefinition(String idRecord, String definitionId, RequestExample def) {
+    public Mono<RecordDocument> newExampleToDefinition(String idRecord, String definitionId, RequestExample def) {
         isValidObjectId(idRecord);
         isValidObjectId(definitionId);
-        var update = exampleMapper.generateUpdateNewExample(idRecord, definitionId, def);
-        return repository.bulkUpdate(List.of(update));
+
+        var update2 = exampleMapper.generateUpdateNewExample(idRecord, definitionId, def);
+        return repository.findAndModify(idRecord, update2);
     }
 
     @Override

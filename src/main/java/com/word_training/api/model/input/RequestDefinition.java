@@ -9,6 +9,7 @@ import java.util.List;
 
 @Data
 public class RequestDefinition {
+    private String definitionId;
     @NotNull
     private String translation;
     @NotNull

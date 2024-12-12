@@ -2,6 +2,7 @@ package com.word_training.api.web;
 
 import com.mongodb.bulk.BulkWriteResult;
 import com.word_training.api.domain.RecordDocument;
+import com.word_training.api.model.Record;
 import com.word_training.api.model.error.ResponseError;
 import com.word_training.api.model.input.*;
 import com.word_training.api.service.RecordService;
@@ -26,6 +27,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/record")
+@CrossOrigin(origins = "http://localhost:4200")
 public class WordTrainingCRUDController {
 
     private final RecordService service;
@@ -54,22 +56,24 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Object>> modifyRecord(
+    public Mono<ResponseEntity<RecordDocument>> modifyRecord(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Changes to apply in select record", required = true)
-            @RequestBody RequestModifyRecord request) {
-        return service.modifyRecord(id, request)
-                .map(this::handleMongoResults)
+            @RequestBody RequestRecord record) {
+        return service.modifyRecord(id, record)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
-   /* @Tag(name = "Records")
+    @Tag(name = "Records")
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<RecordDocument>> removeRecord(
+    public Mono<ResponseEntity<Object>> removeRecord(
             @PathVariable("id") String id) {
-        return Mono.just(ResponseEntity.ok().build());
-    }*/
+        return service.deleteRecord(id)
+                .map(e ->ResponseEntity.ok().build())
+                .subscribeOn(Schedulers.boundedElastic());
+    }
 
     // DEFINITIONS
     @Tag(name = "Definitions")
@@ -82,13 +86,13 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @PostMapping("/{id}/definition")
-    public Mono<ResponseEntity<Object>> createNewDefinition(
+    public Mono<ResponseEntity<RecordDocument>> createNewDefinition(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Definition information", required = true)
             @RequestBody RequestDefinition request) {
         return service.newDefinitionToRecord(id, request)
-                .map(this::handleMongoResults)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -145,7 +149,7 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @PostMapping("/{id}/definition/{definitionId}/example")
-    public Mono<ResponseEntity<Object>> createNewExample(
+    public Mono<ResponseEntity<RecordDocument>> createNewExample(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Definition id", required = true)
@@ -153,7 +157,7 @@ public class WordTrainingCRUDController {
             @Parameter(description = "New example information", required = true)
             @RequestBody RequestExample request) {
         return service.newExampleToDefinition(id, definitionId, request)
-                .map(this::handleMongoResults)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
