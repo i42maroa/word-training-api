@@ -16,6 +16,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
+import static com.word_training.api.constants.WordTrainingConstants.*;
 import static com.word_training.api.model.enums.DefinitionType.isValidDefinitionType;
 
 @Slf4j
@@ -26,55 +27,50 @@ public class RecordMapperImpl implements RecordMapper {
     private final Clock clock;
 
     @Override
-    public RecordDocument generateRecordByRequest(RequestRecord request) {
+    public RecordDocument generateNewRecord(RequestRecord request) {
         var record = new RecordDocument();
 
-        setNecessaryUpdateEnum(request.getType(), RecordType.isValidRecordType, record::setType, "Record type not define");
-        setNecessaryUpdate(request.getValue(), record::setValue, "Record value not define");
+        setNecessaryEnum(request.getType(), RecordType.isValidRecordType, record::setType, "Record type not define");
+        setNecessaryField(request.getValue(), record::setValue, "Record value not define");
         record.setCreationDate(OffsetDateTime.now(clock));
         record.setModificationDate(OffsetDateTime.now(clock));
         record.setRecordId(new ObjectId().toString());
-
-        Optional.ofNullable(request.getDefinitions())
-                .ifPresent(list -> {
-                    var definitions = list.stream()
-                            .map(this::setDefinitionIdAndExampleId)
-                            .toList();
-                    record.setDefinitions(definitions);
-                });
+        setDefinitions(request, record);
 
         return record;
     }
 
     @Override
-    public Update generateUpdateToRecord(String recordId, RequestRecord request) {
+    public Update generateUpateModifyRecord(String recordId, RequestRecord request) {
 
         var record = new Record();
-        setNecessaryUpdateEnum(request.getType(), RecordType.isValidRecordType, record::setType, "Record type not define");
-        setNecessaryUpdate(request.getValue(), record::setValue, "Record value not define");
+        setNecessaryEnum(request.getType(), RecordType.isValidRecordType, record::setType, "Record type not define");
+        setNecessaryField(request.getValue(), record::setValue, "Record value not define");
+        setDefinitions(request, record);
 
+        return new Update()
+                .set(RECORD_VALUE, record.getValue())
+                .set(RECORD_TYPE, record.getType())
+                .set(RECORD_DEFINITIONS_FIELD, record.getDefinitions())
+                .set(RECORD_REG_MODIFICATION_DATE_FIELD, OffsetDateTime.now(clock));
+    }
+
+    private void setDefinitions(RequestRecord request, Record record) {
         Optional.ofNullable(request.getDefinitions())
                 .ifPresent(list -> {
                     var definitions = list.stream()
-                            .map(this::setDefinitionIdAndExampleId)
+                            .map(this::mapDefinitionRequest)
                             .toList();
                     record.setDefinitions(definitions);
                 });
-
-        return new Update()
-                .set("value", record.getValue())
-                .set("type", record.getType())
-                .set("definitions", record.getDefinitions())
-                .set("regModificationDate", OffsetDateTime.now(clock));
     }
 
-
-    private Definition setDefinitionIdAndExampleId(RequestDefinition req) {
+    private Definition mapDefinitionRequest(RequestDefinition req) {
         var definition = new Definition();
 
-        setNecessaryUpdate(req.getTranslation(), definition::setTranslation, "Definition translation not defined");
-        setOptionalUpdateEnum(req.getType(), isValidDefinitionType, definition::setType);
-        setOptionalUpdate(req.getInfo(), definition::setInfo);
+        setNecessaryField(req.getTranslation(), definition::setTranslation, "Definition translation not defined");
+        setOptionalEnum(req.getType(), isValidDefinitionType, definition::setType);
+        setOptionalField(req.getInfo(), definition::setInfo);
 
         Optional.ofNullable(req.getDefinitionId())
                 .ifPresentOrElse(definition::setDefinitionId, () -> definition.setDefinitionId(new ObjectId().toString()));

@@ -1,10 +1,11 @@
 package com.word_training.api.web;
 
-import com.mongodb.bulk.BulkWriteResult;
 import com.word_training.api.domain.RecordDocument;
-import com.word_training.api.model.Record;
 import com.word_training.api.model.error.ResponseError;
-import com.word_training.api.model.input.*;
+import com.word_training.api.model.input.RequestDefinition;
+import com.word_training.api.model.input.RequestExample;
+import com.word_training.api.model.input.RequestModifyExample;
+import com.word_training.api.model.input.RequestRecord;
 import com.word_training.api.service.RecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,13 +16,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -106,15 +104,15 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @PutMapping("/{id}/definition/{definitionId}")
-    public Mono<ResponseEntity<Object>> modifyDefinition(
+    public Mono<ResponseEntity<RecordDocument>> modifyDefinition(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Definition id", required = true)
             @PathVariable("definitionId") String definitionId,
             @Parameter(description = "New definition information", required = true)
-            @RequestBody RequestModifyDefinition request) {
+            @RequestBody RequestDefinition request) {
         return service.modifyDefinitionInRecord(id, definitionId, request)
-                .map(this::handleMongoResults)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -128,13 +126,13 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @DeleteMapping("/{id}/definition/{definitionId}")
-    public Mono<ResponseEntity<Object>> removeDefinition(
+    public Mono<ResponseEntity<RecordDocument>> removeDefinition(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Definition id", required = true)
             @PathVariable("definitionId") String definitionId) {
         return service.deleteDefinitionInRecord(id, definitionId)
-                .map(this::handleMongoResults)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -171,7 +169,7 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @PutMapping("/{id}/definition/{definitionId}/example/{exampleId}")
-    public Mono<ResponseEntity<Object>> modifyExample(
+    public Mono<ResponseEntity<RecordDocument>> modifyExample(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Definition id", required = true)
@@ -181,7 +179,7 @@ public class WordTrainingCRUDController {
             @Parameter(description = "New example information", required = true)
             @RequestBody RequestModifyExample request) {
         return service.modifyExampleInDefinition(id, definitionId, exampleId, request)
-                .map(this::handleMongoResults)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -195,7 +193,7 @@ public class WordTrainingCRUDController {
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ResponseError.class))})
     })
     @DeleteMapping("/{id}/definition/{definitionId}/example/{exampleId}")
-    public Mono<ResponseEntity<Object>> deleteExample(
+    public Mono<ResponseEntity<RecordDocument>> deleteExample(
             @Parameter(description = "Record id", required = true)
             @PathVariable("id") String id,
             @Parameter(description = "Definition id", required = true)
@@ -203,15 +201,7 @@ public class WordTrainingCRUDController {
             @Parameter(description = "Example id", required = true)
             @PathVariable("exampleId") String exampleId) {
         return service.deleteExampleInDefinition(id, definitionId, exampleId)
-                .map(this::handleMongoResults)
+                .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
-    }
-
-    private ResponseEntity<Object> handleMongoResults(BulkWriteResult bulkWriteResult) {
-        return Optional.of(bulkWriteResult.getModifiedCount())
-                .filter(count -> count > 0)
-                .map(r -> ResponseEntity.ok().build())
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ResponseError(HttpStatus.NOT_FOUND.value(), "Ressource not found")));
     }
 }

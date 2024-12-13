@@ -1,6 +1,5 @@
 package com.word_training.api.service.impl;
 
-import com.mongodb.bulk.BulkWriteResult;
 import com.word_training.api.domain.RecordDocument;
 import com.word_training.api.exceptions.WordTrainingApiException;
 import com.word_training.api.mapper.definition.DefinitionMapper;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -35,7 +33,6 @@ public class RecordServiceImpl implements RecordService {
 
     @Override
     public Mono<RecordDocument> getRecord(String id) {
-        isValidObjectId(id);
         return repository.findByRecordId(id);
     }
 
@@ -64,20 +61,20 @@ public class RecordServiceImpl implements RecordService {
 
     @Override
     public Mono<RecordDocument> newRecord(RequestRecord request) {
-        var record = recordMapper.generateRecordByRequest(request);
+        var record = recordMapper.generateNewRecord(request);
         return repository.insert(record);
     }
 
     @Override
-    public Mono<RecordDocument> modifyRecord(String id, RequestRecord record) {
-        isValidObjectId(id);
+    public Mono<RecordDocument> modifyRecord(String recordId, RequestRecord record) {
+        isValidObjectId(recordId);
+
         Optional.ofNullable(record)
                 .orElseThrow(() -> new WordTrainingApiException("Request of change is empty"));
-        var update = recordMapper.generateUpdateToRecord(id, record);
 
-        return repository.findAndModify(id, update);
+        var update = recordMapper.generateUpateModifyRecord(recordId, record);
+        return repository.findAndModify(recordId, update);
     }
-
 
     @Override
     public Mono<Void> deleteRecord(String recordId) {
@@ -85,58 +82,42 @@ public class RecordServiceImpl implements RecordService {
     }
 
     @Override
-    public Mono<RecordDocument> newDefinitionToRecord(String id, RequestDefinition def) {
-        isValidObjectId(id);
-        var update = definitionMapper.generateUpdateNewDefinition2(id, def);
-
-        return repository.findAndModify(id, update);
+    public Mono<RecordDocument> newDefinitionToRecord(String recordId, RequestDefinition def) {
+        var update = definitionMapper.generateUpdateNewDefinition(recordId, def);
+        return repository.findAndModify(recordId, update);
     }
 
     @Override
-    public Mono<BulkWriteResult> modifyDefinitionInRecord(String idRecord, String definitionId, RequestModifyDefinition req) {
-        isValidObjectId(idRecord);
-        isValidObjectId(definitionId);
-        var update = definitionMapper.generateUpdateModifyDefinition(idRecord, definitionId, req);
-        return repository.bulkUpdate(List.of(update));
+    public Mono<RecordDocument> modifyDefinitionInRecord(String recordId, String definitionId, RequestDefinition req) {
+        var update = definitionMapper.generateUpdateModifyDefinition(recordId, definitionId, req);
+        return repository.findAndModify(recordId, update);
     }
 
     @Override
-    public Mono<BulkWriteResult> deleteDefinitionInRecord(String idRecord, String definitionId) {
-        isValidObjectId(idRecord);
-        isValidObjectId(definitionId);
-        var update = definitionMapper.generateUpdateDeleteDefinition(idRecord, definitionId);
-        return repository.bulkUpdate(List.of(update));
+    public Mono<RecordDocument> deleteDefinitionInRecord(String recordId, String definitionId) {
+        var update = definitionMapper.generateUpdateDeleteDefinition(recordId, definitionId);
+        return repository.findAndModify(recordId, update);
     }
 
     @Override
     public Mono<RecordDocument> newExampleToDefinition(String idRecord, String definitionId, RequestExample def) {
-        isValidObjectId(idRecord);
-        isValidObjectId(definitionId);
-
-        var update2 = exampleMapper.generateUpdateNewExample(idRecord, definitionId, def);
-        return repository.findAndModify(idRecord, update2);
+        var update = exampleMapper.generateUpdateNewExample(idRecord, definitionId, def);
+        return repository.findAndModify(idRecord, update);
     }
 
     @Override
-    public Mono<BulkWriteResult> modifyExampleInDefinition(String idRecord, String definitionId, String exampleId, RequestModifyExample req) {
-        isValidObjectId(idRecord);
-        isValidObjectId(definitionId);
-        isValidObjectId(exampleId);
-
+    public Mono<RecordDocument> modifyExampleInDefinition(String idRecord, String definitionId, String exampleId, RequestModifyExample req) {
         Optional.ofNullable(req)
                 .filter(r -> nonNull(r.getTranslation()) || nonNull(r.getInfo()) || nonNull(r.getSentence()))
                 .orElseThrow(() -> new WordTrainingApiException("Request of change is empty"));
 
         var update = exampleMapper.generateUpdateModifyExample(idRecord, definitionId, exampleId, req);
-        return repository.bulkUpdate(List.of(update));
+        return repository.findAndModify(idRecord, update);
     }
 
     @Override
-    public Mono<BulkWriteResult> deleteExampleInDefinition(String idRecord, String definitionId, String exampleId) {
-        isValidObjectId(idRecord);
-        isValidObjectId(definitionId);
-        isValidObjectId(exampleId);
+    public Mono<RecordDocument> deleteExampleInDefinition(String idRecord, String definitionId, String exampleId) {
         var update = exampleMapper.generateUpdateDeleteExample(idRecord, definitionId, exampleId);
-        return repository.bulkUpdate(List.of(update));
+        return repository.findAndModify(idRecord, update);
     }
 }

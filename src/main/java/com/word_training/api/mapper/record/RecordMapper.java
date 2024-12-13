@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.query.Update;
 
 public interface RecordMapper extends BaseMapper {
 
-    RecordDocument generateRecordByRequest(RequestRecord req);
-
-    Update generateUpdateToRecord(String id, RequestRecord record);
+    RecordDocument generateNewRecord(RequestRecord req);
+    Update generateUpateModifyRecord(String id, RequestRecord record);
 }

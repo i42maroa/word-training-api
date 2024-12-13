@@ -10,9 +10,6 @@ import org.springframework.data.mongodb.core.query.Update;
 public interface ExampleMapper extends BaseMapper {
 
     Update generateUpdateNewExample(String id, String definitionId, RequestExample example);
-    UpdateOneModel<Document> generateUpdateModifyExample(String id, String definitionId, String exampleId, RequestModifyExample example);
-    UpdateOneModel<Document> generateUpdateDeleteExample(String id, String definitionId, String exampleId);
-
-
-
+    Update generateUpdateModifyExample(String id, String definitionId, String exampleId, RequestModifyExample example);
+    Update generateUpdateDeleteExample(String id, String definitionId, String exampleId);
 }

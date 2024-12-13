@@ -48,13 +48,6 @@ public class CustomizedRecordRepositoryImpl implements CustomizedRecordRepositor
     }
 
     @Override
-    public Mono<BulkWriteResult> bulkUpdate(List<UpdateOneModel<Document>> writeModels) {
-        return reactiveMongoTemplate
-                .getCollection(RECORD_COLLECTION)
-                .flatMap(collection -> Mono.from(collection.bulkWrite(writeModels)));
-    }
-
-    @Override
     public Mono<RecordDocument> findAndModify(String id, Update update) {
         var query = new Query().addCriteria(Criteria.where("recordId").is(id));
         var options = new FindAndModifyOptions().returnNew(true).upsert(true);

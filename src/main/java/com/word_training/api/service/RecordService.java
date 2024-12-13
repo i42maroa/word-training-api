@@ -1,6 +1,5 @@
 package com.word_training.api.service;
 
-import com.mongodb.bulk.BulkWriteResult;
 import com.word_training.api.domain.RecordDocument;
 import com.word_training.api.exceptions.WordTrainingApiException;
 import com.word_training.api.model.input.*;
@@ -10,7 +9,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.domain.Pageable;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.function.Predicate;
 
 public interface RecordService {
 
@@ -22,17 +22,17 @@ public interface RecordService {
     Mono<Void> deleteRecord(String recordId);
 
     Mono<RecordDocument> newDefinitionToRecord(String id, RequestDefinition def);
-    Mono<BulkWriteResult> modifyDefinitionInRecord(String id, String definitionId, RequestModifyDefinition def);
-    Mono<BulkWriteResult> deleteDefinitionInRecord(String idRecord, String definitionId);
+    Mono<RecordDocument> modifyDefinitionInRecord(String id, String definitionId, RequestDefinition def);
+    Mono<RecordDocument> deleteDefinitionInRecord(String idRecord, String definitionId);
 
     Mono<RecordDocument> newExampleToDefinition(String idRecord, String definitionId, RequestExample def);
-    Mono<BulkWriteResult> modifyExampleInDefinition(String idRecord, String definitionId, String exampleId, RequestModifyExample def);
-    Mono<BulkWriteResult> deleteExampleInDefinition(String idRecord, String definitionId, String exampleId);
+    Mono<RecordDocument> modifyExampleInDefinition(String idRecord, String definitionId, String exampleId, RequestModifyExample def);
+    Mono<RecordDocument> deleteExampleInDefinition(String idRecord, String definitionId, String exampleId);
 
-    default void isValidObjectId(String id){
-        Optional.ofNullable(id)
-                .filter(ObjectId::isValid)
-                .map(isTrue -> true)
-                .orElseThrow(() -> new WordTrainingApiException(id + " is an invalid request id."));
+    default void isValidObjectId(String... ids){
+        Arrays.stream(ids)
+                .filter(Predicate.not(ObjectId::isValid))
+                .findAny()
+                .ifPresent(id -> { throw new  WordTrainingApiException(id + " is an invalid request id.");});
     }
 }
