@@ -16,4 +16,5 @@ public class ClockTestConfiguration {
     public Clock testClock() {
         return Clock.fixed(Instant.parse("2023-05-03T10:00:00.000Z"), ZoneId.of("UTC"));
     }
+
 }

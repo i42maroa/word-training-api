@@ -6,6 +6,8 @@ import com.word_training.api.model.input.RequestDefinition;
 import com.word_training.api.model.input.RequestExample;
 import com.word_training.api.model.input.RequestModifyExample;
 import com.word_training.api.model.input.RequestRecord;
+import com.word_training.api.service.DefinitionService;
+import com.word_training.api.service.ExampleService;
 import com.word_training.api.service.RecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,7 +30,9 @@ import reactor.core.scheduler.Schedulers;
 @CrossOrigin(origins = "http://localhost:4200")
 public class WordTrainingCRUDController {
 
-    private final RecordService service;
+    private final RecordService recordService;
+    private final DefinitionService definitionService;
+    private final ExampleService exampleService;
 
     // RECORD
     @Tag(name = "Records")
@@ -39,7 +43,7 @@ public class WordTrainingCRUDController {
     public Mono<ResponseEntity<RecordDocument>> createNewRecord(
             @Parameter(description = "Record information", required = true)
             @RequestBody RequestRecord request) {
-        return service.newRecord(request)
+        return recordService.newRecord(request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -59,7 +63,7 @@ public class WordTrainingCRUDController {
             @PathVariable("id") String id,
             @Parameter(description = "Changes to apply in select record", required = true)
             @RequestBody RequestRecord record) {
-        return service.modifyRecord(id, record)
+        return recordService.modifyRecord(id, record)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -68,7 +72,7 @@ public class WordTrainingCRUDController {
     @DeleteMapping("/{id}")
     public Mono<ResponseEntity<Object>> removeRecord(
             @PathVariable("id") String id) {
-        return service.deleteRecord(id)
+        return recordService.deleteRecord(id)
                 .map(e ->ResponseEntity.ok().build())
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -89,7 +93,7 @@ public class WordTrainingCRUDController {
             @PathVariable("id") String id,
             @Parameter(description = "Definition information", required = true)
             @RequestBody RequestDefinition request) {
-        return service.newDefinitionToRecord(id, request)
+        return definitionService.newDefinitionToRecord(id, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -111,7 +115,7 @@ public class WordTrainingCRUDController {
             @PathVariable("definitionId") String definitionId,
             @Parameter(description = "New definition information", required = true)
             @RequestBody RequestDefinition request) {
-        return service.modifyDefinitionInRecord(id, definitionId, request)
+        return definitionService.modifyDefinitionInRecord(id, definitionId, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -131,7 +135,7 @@ public class WordTrainingCRUDController {
             @PathVariable("id") String id,
             @Parameter(description = "Definition id", required = true)
             @PathVariable("definitionId") String definitionId) {
-        return service.deleteDefinitionInRecord(id, definitionId)
+        return definitionService.deleteDefinitionInRecord(id, definitionId)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -154,7 +158,7 @@ public class WordTrainingCRUDController {
             @PathVariable("definitionId") String definitionId,
             @Parameter(description = "New example information", required = true)
             @RequestBody RequestExample request) {
-        return service.newExampleToDefinition(id, definitionId, request)
+        return exampleService.newExampleToDefinition(id, definitionId, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -178,7 +182,7 @@ public class WordTrainingCRUDController {
             @PathVariable("exampleId") String exampleId,
             @Parameter(description = "New example information", required = true)
             @RequestBody RequestModifyExample request) {
-        return service.modifyExampleInDefinition(id, definitionId, exampleId, request)
+        return exampleService.modifyExampleInDefinition(id, definitionId, exampleId, request)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }
@@ -200,7 +204,7 @@ public class WordTrainingCRUDController {
             @PathVariable("definitionId") String definitionId,
             @Parameter(description = "Example id", required = true)
             @PathVariable("exampleId") String exampleId) {
-        return service.deleteExampleInDefinition(id, definitionId, exampleId)
+        return exampleService.deleteExampleInDefinition(id, definitionId, exampleId)
                 .map(ResponseEntity::ok)
                 .subscribeOn(Schedulers.boundedElastic());
     }

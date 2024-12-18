@@ -1,5 +1,7 @@
-package com.word_training.api.mapper.definition;
+package com.word_training.api.mapper;
 
+import com.word_training.api.mapper.definition.DefinitionMapper;
+import com.word_training.api.mapper.definition.DefinitionMapperImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;

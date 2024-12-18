@@ -21,14 +21,6 @@ public interface RecordService {
     Mono<RecordDocument> modifyRecord(String id, RequestRecord record);
     Mono<Void> deleteRecord(String recordId);
 
-    Mono<RecordDocument> newDefinitionToRecord(String id, RequestDefinition def);
-    Mono<RecordDocument> modifyDefinitionInRecord(String id, String definitionId, RequestDefinition def);
-    Mono<RecordDocument> deleteDefinitionInRecord(String idRecord, String definitionId);
-
-    Mono<RecordDocument> newExampleToDefinition(String idRecord, String definitionId, RequestExample def);
-    Mono<RecordDocument> modifyExampleInDefinition(String idRecord, String definitionId, String exampleId, RequestModifyExample def);
-    Mono<RecordDocument> deleteExampleInDefinition(String idRecord, String definitionId, String exampleId);
-
     default void isValidObjectId(String... ids){
         Arrays.stream(ids)
                 .filter(Predicate.not(ObjectId::isValid))

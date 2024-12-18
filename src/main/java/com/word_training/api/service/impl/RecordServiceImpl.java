@@ -27,8 +27,6 @@ import static java.util.Objects.nonNull;
 public class RecordServiceImpl implements RecordService {
 
     private final RecordMapper recordMapper;
-    private final DefinitionMapper definitionMapper;
-    private final ExampleMapper exampleMapper;
     private final RecordRepository repository;
 
     @Override
@@ -79,45 +77,5 @@ public class RecordServiceImpl implements RecordService {
     @Override
     public Mono<Void> deleteRecord(String recordId) {
         return repository.deleteByRecordId(recordId);
-    }
-
-    @Override
-    public Mono<RecordDocument> newDefinitionToRecord(String recordId, RequestDefinition def) {
-        var update = definitionMapper.generateUpdateNewDefinition(recordId, def);
-        return repository.findAndModify(recordId, update);
-    }
-
-    @Override
-    public Mono<RecordDocument> modifyDefinitionInRecord(String recordId, String definitionId, RequestDefinition req) {
-        var update = definitionMapper.generateUpdateModifyDefinition(recordId, definitionId, req);
-        return repository.findAndModify(recordId, update);
-    }
-
-    @Override
-    public Mono<RecordDocument> deleteDefinitionInRecord(String recordId, String definitionId) {
-        var update = definitionMapper.generateUpdateDeleteDefinition(recordId, definitionId);
-        return repository.findAndModify(recordId, update);
-    }
-
-    @Override
-    public Mono<RecordDocument> newExampleToDefinition(String idRecord, String definitionId, RequestExample def) {
-        var update = exampleMapper.generateUpdateNewExample(idRecord, definitionId, def);
-        return repository.findAndModify(idRecord, update);
-    }
-
-    @Override
-    public Mono<RecordDocument> modifyExampleInDefinition(String idRecord, String definitionId, String exampleId, RequestModifyExample req) {
-        Optional.ofNullable(req)
-                .filter(r -> nonNull(r.getTranslation()) || nonNull(r.getInfo()) || nonNull(r.getSentence()))
-                .orElseThrow(() -> new WordTrainingApiException("Request of change is empty"));
-
-        var update = exampleMapper.generateUpdateModifyExample(idRecord, definitionId, exampleId, req);
-        return repository.findAndModify(idRecord, update);
-    }
-
-    @Override
-    public Mono<RecordDocument> deleteExampleInDefinition(String idRecord, String definitionId, String exampleId) {
-        var update = exampleMapper.generateUpdateDeleteExample(idRecord, definitionId, exampleId);
-        return repository.findAndModify(idRecord, update);
     }
 }
